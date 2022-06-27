@@ -521,11 +521,11 @@ class Message(object):
         f.reset()
         sf = SubField()
         f.add_subfields(sf)
-        sf.add_values(1, len(self._records)-1)
+        sf.add_values(1, "%02d" % ( len(self._records)-1) )
         for r in self._records[1:]:
             sf = SubField()
             f.add_subfields(sf)
-            sf.add_values(r.type, r.IDC)
+            sf.add_values(r.type, "%02d" % int(r.IDC))
         return f
 
     def __str__(self):
@@ -1331,10 +1331,13 @@ class Field(object):
     nistitl.NistException: BAD_SUBFIELD_VALUE: Subfield of 2.003: cannot have items
 
     """
+
     __slots__ = ['record', 'tag', 'type', 'format', 'alias', '_subfields', '_value']
     SEPARATOR = RS
 
-    def __init__(self, record, tag, value='', type='FSI', format='%d.%03d:', alias=''):
+    def __init__(self, record, tag, value='', type='FSI', format='%d.%02d:', alias=''):
+        if record==2:
+            format='%d.%03d:'
         """
         Creation of a new field.
 
@@ -1358,7 +1361,7 @@ class Field(object):
         self._subfields = []
         self._value = ''
         self.value = value
-
+       
     def get_value(self):
         if self._subfields:
             return [x.value for x in self._subfields]
@@ -1382,7 +1385,6 @@ class Field(object):
                 sf = SubField('', self.type)
                 sf.add_values(*v)
                 self.add_subfields(sf)
-
     value = property(get_value, set_value)
     """
     Access to the value of the field. The value is a string or a list
@@ -1468,7 +1470,7 @@ class BinaryField(object):
     """
     __slots__ = ['record', 'tag', '_value', 'format', 'alias']
 
-    def __init__(self, record, tag, value=b'', format='%d.%03d:', alias=''):
+    def __init__(self, record, tag, value=b'', format='%d.%02d:', alias=''):
         """
         Creation of a new binary field.
 
@@ -1550,7 +1552,6 @@ class SubField(object):
         self.type = type
         self.values = []
         self.value = value
-
     def get_value(self):
         if 'I' in self.type and self.values:
             return self.values
@@ -1578,6 +1579,8 @@ class SubField(object):
         if i and 'I' not in self.type:
             raise NistException("Subfield cannot have items", NistError.BAD_SUBFIELD_VALUE)
         for j in i:
+           
+            #  values 1.02
             self.values.append(j)
 
     def __getitem__(self, idx):
